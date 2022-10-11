@@ -4,13 +4,7 @@ import boto3
 _SQS_CLIENT = None
 
 def send_event_to_queue(event, queue_name):
-    '''
-     Responsável pelo envio do evento para uma fila
-    :param event: Evento  (dict)
-    :param queue_name: Nome da fila (str)
-    :return: None
-    '''
-    
+
     sqs_client = boto3.client("sqs", region_name="us-east-1")
     response = sqs_client.get_queue_url(
         QueueName=queue_name
@@ -24,24 +18,18 @@ def send_event_to_queue(event, queue_name):
 
 
 def handler(event):
-    '''
-    #  Função principal que é sensibilizada para cada evento
-    Aqui você deve começar a implementar o seu código
-    Você pode criar funções/classes à vontade
-    Utilize a função send_event_to_queue para envio do evento para a fila,
-        não é necessário alterá-la
-    '''
 
     f = open('C:/Users/Host/Documents/git/data-challenge/data-challenge/desafios/exercicio1/schema.json')
     schema_template = json.load(f)
     
-    validate_non_object_type_fields(event, schema_template)
-    validate_address_field(event, schema_template)
+    validate_non_object_type_fields(event, schema_template) #valida campos dos tipos comuns(int, string..)
+    validate_address_field(event, schema_template) #valida campo do tipo objeto
 
+    #Após validacao, eventos sao enviados para a fila
     send_event_to_queue(event, 'valid-events-queue')
 
 
-def validate_non_object_type_fields(event, schema_template):
+def validate_non_object_type_fields(event, schema_template): #Funcao para todos os campos que nao sao do tipo "objeto"
     required_fields = sorted(schema_template['required'])
     event_fields = sorted([key for key in event])
 
@@ -57,7 +45,7 @@ def validate_non_object_type_fields(event, schema_template):
                 raise Exception(f"{field} has type {type(event_field)} where should be {type(schema_template_field)}") 
 
 
-def validate_address_field(event, schema_template):
+def validate_address_field(event, schema_template): #Funcao para tratar o campo do tipo objeto
 
     for field in schema_template['properties']:
         if field == 'address':
